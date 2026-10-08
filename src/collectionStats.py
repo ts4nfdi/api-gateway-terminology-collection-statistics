@@ -150,7 +150,7 @@ def get_onto_stats_from_ontoportal(api_endpoint, terminology, collection_stats):
     elif api_endpoint == "https://data.earthportal.eu":
         apikey = os.getenv("EARTHPORTAL_API_KEY")
     elif api_endpoint == "https://data.biodivportal.gfbio.org":
-        apikey = os.getenv("BIODIV_API_KEY")
+        apikey = os.getenv("BIODIVPORTAL_API_KEY")
     elif api_endpoint == "https://data.ecoportal.lifewatch.eu":
         apikey = os.getenv("ECOPORTAL_API_KEY")
     elif api_endpoint == "https://data.lovportal.lirmm.fr":
@@ -250,7 +250,7 @@ def write_to_db(collections_stats):
     try:
         conn = psycopg.connect(
             os.getenv("DB_URL"),
-            user=os.getenv("DB_USER"),
+            user=os.getenv("DB_USERNAME"),
             password=os.getenv("DB_PASSWORD"),
         )
 
