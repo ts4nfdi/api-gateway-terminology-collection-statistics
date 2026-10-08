@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collection-stats
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: collection-stats
+  template:
+    metadata:
+      labels:
+        app: collection-stats
+    spec:
+      containers:
+        - name: collection-stats
+          image: ghcr.io/ts4nfdi/api-gateway-terminology-collection-statistics:latest
+          env:
+            env:
+            - name: DB_URL
+              value: "postgresql://ts4nfdi-api-gateway-postgres-clone.ts4nfdi.svc.cluster.local:5432/gateway"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres.ts4nfdi-api-gateway-postgres-clone.credentials.postgresql.acid.zalan.do
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres.ts4nfdi-api-gateway-postgres-clone.credentials.postgresql.acid.zalan.do
+                  key: password
+            - name: AGROPORTAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: agroportal-api-key
+                  key: AGROPORTAL_API_KEY
+            - name: EARTHPORTAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: earthportal-api-key
+                  key: EARTHPORTAL_API_KEY
+            - name: BIODIVPORTAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: biodivportal-api-key
+                  key: BIODIVPORTAL_API_KEY
+            - name: ECOPORTAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ecoportal-api-key
+                  key: ECOPORTAL_API_KEY
+            - name: LOVPORTAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lovportal-api-key
+                  key: LOVPORTAL_API_KEY
+            - name: BIOPORTAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bioportal-api-key
+                  key: BIOPORTAL_API_KEY
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              memory: 100Mi
+            limits:
+              memory: 250Mi
