@@ -4,35 +4,45 @@ from urllib.parse import urlparse, parse_qs
 
 import collectionStats as cS
 
-providers = cS.get_providers()
-
 class Handler(BaseHTTPRequestHandler):
 
-    def do_GET(self):
+    def do_POST(self):
         parsed_url = urlparse(self.path)
         try:
             if parsed_url.path == "/stats":
                 collections = self.handle_stats(parsed_url)
             elif parsed_url.path == "/stats/all":
-                collections = self.handle_stats_all(parsed_url)
+                collections = self.handle_stats_all()
             else:
                 self.send_json(404, {"error": "Not found"})
                 return
 
+            if not collections:
+                self.send_json(404, {"error": "No matching collections"})
+                return
+
+            providers = cS.get_providers()
+
             collections_stats, collection_errors = cS.calculate_stats_for_collections(providers, collections)
+
+            if not collections_stats:
+                self.send_json(500, {
+                    "error": "No collections without errors available for db insertion.",
+                    "collection_errors": collection_errors
+
+                })
+                return
             cS.write_to_db(collections_stats)
-            print(collections_stats)
             self.send_success_message(collection_errors)
 
         except Exception as e:
-            self.send_json(500, {"error": "Internal error"})
+            print(f"Internal server error: {e}")
+            self.send_json(500, {"error": "Internal server error"})
             return
 
-
-    def handle_stats_all(self, parsed_url):
+    def handle_stats_all(self):
         collections = cS.create_selected_collection_list(include_all=True)
         return collections
-
 
     def handle_stats(self, parsed_url):
         params = parse_qs(parsed_url.query)
@@ -45,13 +55,13 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(200, {
                 "message": "Successfully inserted collection stats into DB."
                            " For some collections no statistics could be generated.",
-                "errors": collection_errors
+                "collection_errors": collection_errors
             })
         else:
             self.send_json(200, {
                 "message": "Successfully inserted collection stats into DB."
                            " For all collections statistics could be generated.",
-                "errors": []
+                "collection_errors": []
             })
 
     def send_json(self, status_code, data):

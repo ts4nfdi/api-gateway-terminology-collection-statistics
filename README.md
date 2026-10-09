@@ -17,15 +17,15 @@ The service runs on port `8000` and provides two endpoints.
 
 ### Calculate statistics for selected collections
 
-`GET /stats?collection=<collection-id>`
+`POST /stats?collection=<collection-id>`
 
 Multiple collections can be specified:
 
-`GET /stats?collection=<collection-id-1>&collection=<collection-id-2>`
+`POST /stats?collection=<collection-id-1>&collection=<collection-id-2>`
 
 ### Calculate statistics for all collections
 
-`GET /stats/all`
+`POST /stats/all`
 
 ## Docker
 
@@ -47,8 +47,6 @@ It contains:
 - `service.yaml` – exposes the deployed pods through a Kubernetes Service
 
 The deployment is intended for the target Kubernetes cluster, where the required Secrets and PostgreSQL service already exist.
-
-Set the `image` field in `k8s/deployment.yaml` to the published GHCR image.
 
 Select the target cluster context and deploy the Kubernetes resources to the appropriate namespace:
 
@@ -75,7 +73,7 @@ Inside the Kubernetes cluster, the service is reachable at:
 Example (run in the same namespace as the service):
 
 ```bash
-kubectl run test-client -n <namespace> --rm -it --restart=Never --image=curlimages/curl -- curl http://ts4nfdi-api-gateway-collection-statistics:8000/stats/all
+kubectl run test-client -n <namespace> --rm -it --restart=Never --image=curlimages/curl -- curl -X POST http://ts4nfdi-api-gateway-collection-statistics:8000/stats/all
 ```
 
 The service currently uses the Kubernetes `ClusterIP` type and is therefore only directly reachable from inside the cluster.

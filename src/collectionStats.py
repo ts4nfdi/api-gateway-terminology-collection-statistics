@@ -45,27 +45,28 @@ def get_providers() -> dict:
             providers[p["name"]] = {"api_type": api_type, "api_endpoint": api_endpoint}
     except Exception as e:
         print(f"Unexpected answer from {providers_endpoint}: {e}.")
-        sys.exit(1)
+        raise
 
     return providers
 
 
 def create_selected_collection_list(collection_ids=None, include_all=False):
     collections_endpoint = "https://terminology.services.base4nfdi.de/api-gateway/collections/"
-    all_collections = send_request(collections_endpoint)
-
-    if include_all:
-        return all_collections
-
-    if collection_ids is None:
-        return []
-
     try:
+        all_collections = send_request(collections_endpoint)
+
+
+        if include_all:
+            return all_collections
+
+        if collection_ids is None:
+            return []
+
         collections = [c for c in all_collections if c["id"] in collection_ids]
         return collections
     except Exception as e:
         print(f"Unexpected answer from {collections_endpoint}: {e}.")
-        sys.exit(1)
+        raise
 
 
 def calculate_stats_for_collections(providers, collections):
@@ -143,6 +144,7 @@ def get_onto_stats_from_ols2(api_endpoint, terminology, collection_stats):
 
 
 def get_onto_stats_from_ontoportal(api_endpoint, terminology, collection_stats):
+    apikey = None
     if api_endpoint == "https://data.agroportal.eu":
         apikey = os.getenv("AGROPORTAL_API_KEY")
     elif api_endpoint == "https://data.earthportal.eu":
@@ -155,7 +157,7 @@ def get_onto_stats_from_ontoportal(api_endpoint, terminology, collection_stats):
         apikey = os.getenv("LOVPORTAL_API_KEY")
 
     if apikey is None:
-        return
+        raise ValueError(f"Missing API key for provider {api_endpoint}")
 
     url = f"{api_endpoint}/ontologies/{terminology['label']}/metrics"
     params = {"apikey": apikey}
@@ -242,6 +244,9 @@ def get_onto_stats_from_nerc(api_endpoint, terminology, collection_stats):
 
 
 def write_to_db(collections_stats):
+    if not collections_stats:
+        return
+
     conn = None
     cursor = None
 
@@ -255,9 +260,9 @@ def write_to_db(collections_stats):
         cursor = conn.cursor()
 
         rows = []
-        for collection_name, stats in collections_stats.items():
+        for collection_id, stats in collections_stats.items():
             rows.append((
-                collection_name,
+                collection_id,
                 stats["created"],
                 stats["count"][PROPERTY],
                 stats["count"][CLASS],
@@ -295,8 +300,7 @@ def write_to_db(collections_stats):
         if conn is not None:
             conn.rollback()
         print(f"Database error: {e}.")
-        print("Exiting program with no return data and no database upload.")
-        sys.exit(1)
+        raise
 
     finally:
         if cursor is not None:
