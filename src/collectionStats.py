@@ -75,7 +75,6 @@ def calculate_stats_for_collections(providers, collections):
     print("Calculating statistics for collections...")
     for c in collections:
         try:
-            c_id = BASE_URL + c["id"]
             time = datetime.now().strftime("%Y-%m-%d %H:%M")
 
             c_stats = {"created": time,
@@ -93,7 +92,7 @@ def calculate_stats_for_collections(providers, collections):
             continue
 
         # collection_stats only get added if not exception occurred while processing the collection
-        collections_stats[c_id] = c_stats
+        collections_stats[c["id"]] = c_stats
 
     return collections_stats, collection_errors
 
