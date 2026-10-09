@@ -70,12 +70,12 @@ kubectl get services -n <namespace>
 
 Inside the Kubernetes cluster, the service is reachable at:
 
-`http://collection-stats-service:8000`
+`http://ts4nfdi-api-gateway-collection-statistics:8000`
 
 Example (run in the same namespace as the service):
 
 ```bash
-kubectl run test-client -n <namespace> --rm -it --restart=Never --image=curlimages/curl -- curl http://collection-stats-service:8000/stats/all
+kubectl run test-client -n <namespace> --rm -it --restart=Never --image=curlimages/curl -- curl http://ts4nfdi-api-gateway-collection-statistics:8000/stats/all
 ```
 
 The service currently uses the Kubernetes `ClusterIP` type and is therefore only directly reachable from inside the cluster.

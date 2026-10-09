@@ -277,7 +277,7 @@ def write_to_db(collections_stats):
 
         cursor.execute(
             f"""
-            INSERT INTO "collection_stats" (
+            INSERT INTO "collection_statistics" (
                 collection,
                 "timestamp",
                 "{PROPERTY}",
