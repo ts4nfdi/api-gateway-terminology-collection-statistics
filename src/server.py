@@ -10,20 +10,24 @@ class Handler(BaseHTTPRequestHandler):
         parsed_url = urlparse(self.path)
         try:
             if parsed_url.path == "/stats":
-                collections = self.handle_stats(parsed_url)
+                collections, collection_errors = self.handle_stats(parsed_url)
             elif parsed_url.path == "/stats/all":
-                collections = self.handle_stats_all()
+                collections, collection_errors = self.handle_stats_all()
             else:
                 self.send_json(404, {"error": "Not found"})
                 return
 
             if not collections:
-                self.send_json(404, {"error": "No matching collections"})
+                self.send_json(404, {
+                    "error": "No matching collections",
+                    "collection_errors": collection_errors
+                })
                 return
 
             providers = cS.get_providers()
 
-            collections_stats, collection_errors = cS.calculate_stats_for_collections(providers, collections)
+            collections_stats, collection_errors2 = cS.calculate_stats_for_collections(providers, collections)
+            collection_errors = collection_errors + collection_errors2
 
             if not collections_stats:
                 self.send_json(500, {
@@ -41,14 +45,14 @@ class Handler(BaseHTTPRequestHandler):
             return
 
     def handle_stats_all(self):
-        collections = cS.create_selected_collection_list(include_all=True)
-        return collections
+        collections, collection_errors = cS.create_selected_collection_list(include_all=True)
+        return collections, collection_errors
 
     def handle_stats(self, parsed_url):
         params = parse_qs(parsed_url.query)
         collection_ids = params.get("collection", [])
-        collections = cS.create_selected_collection_list(collection_ids)
-        return collections
+        collections, collection_errors = cS.create_selected_collection_list(collection_ids)
+        return collections, collection_errors
 
     def send_success_message(self, collection_errors):
         if collection_errors:

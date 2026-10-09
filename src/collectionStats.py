@@ -55,15 +55,29 @@ def create_selected_collection_list(collection_ids=None, include_all=False):
     try:
         all_collections = send_request(collections_endpoint)
 
-
         if include_all:
-            return all_collections
+            return all_collections, []
 
         if collection_ids is None:
-            return []
+            return [], []
 
-        collections = [c for c in all_collections if c["id"] in collection_ids]
-        return collections
+        collections = []
+        collection_errors = []
+        for collection_id in collection_ids:
+            found = False
+            for collection in all_collections:
+                if collection["id"] == collection_id:
+                    found = True
+                    collections.append(collection)
+                    break
+
+            if not found:
+                collection_errors.append({
+                    "collection": {"id": collection_id},
+                    "error": "Collection not found",
+                })
+        return collections, collection_errors
+
     except Exception as e:
         print(f"Unexpected answer from {collections_endpoint}: {e}.")
         raise
@@ -314,12 +328,14 @@ def write_to_db(collections_stats):
 def main():
     providers = get_providers()
     if len(sys.argv) == 1:
-        collections = create_selected_collection_list(include_all=True)
+        collections, collection_errors = create_selected_collection_list(include_all=True)
     else:
         collection_ids = sys.argv[1:]
-        collections = create_selected_collection_list(collection_ids)
+        collections, collection_errors = create_selected_collection_list(collection_ids)
 
-    collections_stats, collection_errors = calculate_stats_for_collections(providers, collections)
+    collections_stats, collection_errors2 = calculate_stats_for_collections(providers, collections)
+
+    collection_errors = collection_errors + collection_errors2
 
     print("Collections stats:")
     pprint(collections_stats)
