@@ -144,7 +144,6 @@ def get_onto_stats_from_ols2(api_endpoint, terminology, collection_stats):
 
 
 def get_onto_stats_from_ontoportal(api_endpoint, terminology, collection_stats):
-    # todo: set apikey for all api_endpoints in repo as repo_secrets
     if api_endpoint == "https://data.agroportal.eu":
         apikey = os.getenv("AGROPORTAL_API_KEY")
     elif api_endpoint == "https://data.earthportal.eu":
@@ -310,7 +309,6 @@ def write_to_db(collections_stats):
 
 
 def main():
-    global collection_errors
     providers = get_providers()
     if len(sys.argv) == 1:
         collections = create_selected_collection_list(include_all=True)

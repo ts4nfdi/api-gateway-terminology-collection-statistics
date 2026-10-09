@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: collection-stats
+  name: ts4nfdi-api-gateway-collection-statistics
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: collection-stats
+      app: ts4nfdi-api-gateway-collection-statistics
   template:
     metadata:
       labels:
-        app: collection-stats
+        app: ts4nfdi-api-gateway-collection-statistics
     spec:
       containers:
-        - name: collection-stats
+        - name: ts4nfdi-api-gateway-collection-statistics
           image: ghcr.io/ts4nfdi/api-gateway-terminology-collection-statistics:latest
           env:
           - name: DB_URL
