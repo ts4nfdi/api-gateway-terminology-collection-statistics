@@ -70,10 +70,25 @@ Inside the Kubernetes cluster, the service is reachable at:
 
 `http://ts4nfdi-api-gateway-collection-statistics:8000`
 
-Example (run in the same namespace as the service):
+For testing you can create a test client:
 
 ```bash
-kubectl run test-client -n <namespace> --rm -it --restart=Never --image=curlimages/curl -- curl -X POST http://ts4nfdi-api-gateway-collection-statistics:8000/stats/all
+kubectl run test-client -n <namespace> --restart=Never --image=curlimages/curl -- curl -X POST http://ts4nfdi-api-gateway-collection-statistics:8000/stats/all
+```
+
+Check the output of the test client and service:
+
+```bash
+kubectl logs -n <namespace> test-client
+```
+
+```bash
+kubectl logs -n <namespace> ts4nfdi-api-gateway-collection-statistics-<podnumber>
+```
+
+Delete the test-client:
+```bash
+kubectl delete pod test-client -n <namespace>
 ```
 
 The service currently uses the Kubernetes `ClusterIP` type and is therefore only directly reachable from inside the cluster.
