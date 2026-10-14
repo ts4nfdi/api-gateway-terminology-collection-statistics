@@ -4,6 +4,7 @@ The Collection Statistics Service calculates statistics for terminology collecti
 
 For each collection, the service retrieves statistics from the corresponding terminology providers and counts:
 
+- terminologies
 - RDF Properties
 - OWL Classes
 - OWL Named Individuals
@@ -90,6 +91,10 @@ Inside the Kubernetes cluster, the service is reachable at:
 
 `http://ts4nfdi-api-gateway-collection-statistics:8000`
 
+The service currently uses the Kubernetes `ClusterIP` type and is therefore only directly reachable from inside the cluster.
+
+## Testing in Kubernetes
+
 For testing you can create a test client:
 
 ```bash
@@ -110,8 +115,29 @@ Delete the test-client:
 ```bash
 kubectl delete pod test-client -n <namespace>
 ```
+## Running the script locally
 
-The service currently uses the Kubernetes `ClusterIP` type and is therefore only directly reachable from inside the cluster.
+You can run `collectionStats.py` directly to test the statistics calculation without starting the HTTP service:
+
+```bash
+python src/collectionStats.py
+```
+
+By default, the script processes all collections and attempts to write the calculated statistics to PostgreSQL. To enable database writes when running locally, you must configure the required database environment variables yourself (`DB_URL`, `DB_USERNAME`, and `DB_PASSWORD`). Provider API keys must also be set if the selected collections require them.
+
+To calculate statistics without writing to the database, use `--no-db`:
+
+```bash
+python src/collectionStats.py --no-db
+```
+
+You can optionally pass one or more collection IDs to process only those collections:
+
+```bash
+python src/collectionStats.py --no-db <collection-id-1> <collection-id-2>
+```
+
+The results and any processing errors are printed to the terminal. The `--no-db` option skips the database write but does not bypass provider API-key requirements.
 
 ## Project Structure
 

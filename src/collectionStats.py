@@ -4,6 +4,7 @@ from pprint import pprint
 from datetime import datetime
 import psycopg
 import sys
+import argparse
 
 # region global variables
 BASE_URL = "https://w3id.org/ts4nfdi/collection/"
@@ -114,6 +115,7 @@ def calculate_stats_for_collections(providers, collections):
 
 def calculate_collection_stats(collection, providers):
     collection_stats = {
+        "terminologies": len(collection["terminologies"]),
         PROPERTY: 0,
         CLASS: 0,
         INDIVIDUAL: 0,
@@ -278,6 +280,7 @@ def write_to_db(collections_stats):
             rows.append((
                 collection_id,
                 stats["created"],
+                stats["count"]["terminologies"],
                 stats["count"][PROPERTY],
                 stats["count"][CLASS],
                 stats["count"][INDIVIDUAL],
@@ -285,7 +288,7 @@ def write_to_db(collections_stats):
                 ))
 
         placeholders = ",".join(
-            ["(%s, %s, %s, %s, %s, %s)"] * len(rows)
+            ["(%s, %s, %s, %s, %s, %s, %s)"] * len(rows)
         )
 
         values = []
@@ -298,6 +301,7 @@ def write_to_db(collections_stats):
             INSERT INTO "collection_statistics" (
                 collection_id,
                 "timestamp",
+                terminology_count,
                 property_count,
                 class_count,
                 named_individual_count,
@@ -326,12 +330,17 @@ def write_to_db(collections_stats):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Calculate terminology collection statistics.")
+    parser.add_argument("collection_ids", nargs="*", help="Collection IDs to process (default: all)")
+    parser.add_argument("--no-db", action="store_true", help="Skip writing to DB.")
+    args = parser.parse_args()
+
     providers = get_providers()
-    if len(sys.argv) == 1:
+
+    if not args.collection_ids:
         collections, collection_errors = create_selected_collection_list(include_all=True)
     else:
-        collection_ids = sys.argv[1:]
-        collections, collection_errors = create_selected_collection_list(collection_ids)
+        collections, collection_errors = create_selected_collection_list(args.collection_ids)
 
     collections_stats, collection_errors2 = calculate_stats_for_collections(providers, collections)
 
@@ -339,7 +348,12 @@ def main():
 
     print("Collections stats:")
     pprint(collections_stats)
-    write_to_db(collections_stats)
+
+    if args.no_db:
+        print("Database write skipped (--no-db).")
+    else:
+        write_to_db(collections_stats)
+
     if len(collection_errors) > 0:
         print("For some collections no statistics could be generated.")
         print(collection_errors)
