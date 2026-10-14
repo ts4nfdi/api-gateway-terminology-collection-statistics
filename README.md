@@ -11,11 +11,31 @@ For each collection, the service retrieves statistics from the corresponding ter
 
 The calculated statistics are stored in a PostgreSQL database.
 
+## Database Setup
+
+The service stores the calculated statistics in a PostgreSQL table named `collection_statistics`.
+
+Before deploying the service, create the following table in the target database:
+
+```sql
+CREATE TABLE IF NOT EXISTS collection_statistics (
+    collection_id UUID NOT NULL,
+    "timestamp" TIMESTAMP NOT NULL,
+    terminology_count BIGINT NOT NULL,
+    property_count BIGINT NOT NULL,
+    class_count BIGINT NOT NULL,
+    named_individual_count BIGINT NOT NULL,
+    concept_count BIGINT NOT NULL,
+    PRIMARY KEY (collection_id, "timestamp")
+);
+```
+Important: The table and column names must match those expected by the service exactly; otherwise, database operations will fail.
+
 ## API
 
 The service runs on port `8000` and provides two endpoints.
 
-### Calculate statistics for selected collections
+- ### Calculate statistics for selected collections
 
 `POST /stats?collection=<collection-id>`
 
@@ -23,7 +43,7 @@ Multiple collections can be specified:
 
 `POST /stats?collection=<collection-id-1>&collection=<collection-id-2>`
 
-### Calculate statistics for all collections
+- ### Calculate statistics for all collections
 
 `POST /stats/all`
 
