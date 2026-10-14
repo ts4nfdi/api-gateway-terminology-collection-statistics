@@ -4,6 +4,7 @@ The Collection Statistics Service calculates statistics for terminology collecti
 
 For each collection, the service retrieves statistics from the corresponding terminology providers and counts:
 
+- terminologies
 - RDF Properties
 - OWL Classes
 - OWL Named Individuals
