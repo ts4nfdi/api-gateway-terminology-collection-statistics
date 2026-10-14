@@ -298,10 +298,10 @@ def write_to_db(collections_stats):
             INSERT INTO "collection_statistics" (
                 collection_id,
                 "timestamp",
-                "{PROPERTY}",
-                "{CLASS}",
-                "{INDIVIDUAL}",
-                "{CONCEPT}"
+                property_count,
+                class_count,
+                named_individual_count,
+                concept_count
             )
             VALUES {placeholders}
             """,
