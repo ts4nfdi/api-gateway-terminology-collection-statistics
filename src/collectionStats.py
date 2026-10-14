@@ -115,6 +115,7 @@ def calculate_stats_for_collections(providers, collections):
 
 def calculate_collection_stats(collection, providers):
     collection_stats = {
+        "terminologies": len(collection["terminologies"]),
         PROPERTY: 0,
         CLASS: 0,
         INDIVIDUAL: 0,
@@ -279,6 +280,7 @@ def write_to_db(collections_stats):
             rows.append((
                 collection_id,
                 stats["created"],
+                stats["count"]["terminologies"],
                 stats["count"][PROPERTY],
                 stats["count"][CLASS],
                 stats["count"][INDIVIDUAL],
@@ -286,7 +288,7 @@ def write_to_db(collections_stats):
                 ))
 
         placeholders = ",".join(
-            ["(%s, %s, %s, %s, %s, %s)"] * len(rows)
+            ["(%s, %s, %s, %s, %s, %s, %s)"] * len(rows)
         )
 
         values = []
@@ -299,6 +301,7 @@ def write_to_db(collections_stats):
             INSERT INTO "collection_statistics" (
                 collection_id,
                 "timestamp",
+                terminology_count,
                 property_count,
                 class_count,
                 named_individual_count,
