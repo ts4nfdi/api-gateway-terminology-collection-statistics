@@ -81,7 +81,7 @@ The image is published to the GitHub Container Registry (GHCR) at:
 ghcr.io/ts4nfdi/api-gateway-terminology-collection-statistics:latest
 ghcr.io/ts4nfdi/api-gateway-terminology-collection-statistics:<commit-sha>
 ```
-## Kubernetes Deployment
+## Kubernetes Configuration
 
 The Kubernetes configuration is located in the `k8s/` directory.
 
@@ -89,6 +89,7 @@ It contains:
 
 - `deployment.yaml` – deploys the Collection Statistics container and references the existing database and API-key Secrets in the target cluster
 - `service.yaml` – exposes the deployed pods through a Kubernetes Service
+- `cronjob.yaml` – schedules automatic statistics calculation (runs once a week)
 
 The deployment is intended for the target Kubernetes cluster, where the required Secrets and PostgreSQL service already exist.
 
