@@ -2,7 +2,9 @@ import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
-import collectionStats as cS
+import collection_stats as cS
+from providers import get_providers
+import database as db
 
 class Handler(BaseHTTPRequestHandler):
 
@@ -24,9 +26,9 @@ class Handler(BaseHTTPRequestHandler):
                 })
                 return
 
-            providers = cS.get_providers()
+            providers = get_providers()
 
-            collections_stats, collection_errors2 = cS.calculate_stats_for_collections(providers, collections)
+            collections_stats, collection_errors2 , terminologies_stats= cS.calc_stats_for_collections(providers, collections)
             collection_errors = collection_errors + collection_errors2
 
             if not collections_stats:
@@ -36,7 +38,22 @@ class Handler(BaseHTTPRequestHandler):
 
                 })
                 return
-            cS.write_to_db(collections_stats)
+
+            print("Inserting calculated statistics into database...")
+            with db.get_connection() as conn:
+                db.insert_collection_stats(collections_stats, conn)
+                db.insert_terminology_stats(terminologies_stats, conn)
+
+            # print("Terminology statistics:")
+            # print(terminologies_stats)
+
+            print("Collection statistics:")
+            print(collections_stats)
+
+            print("Collection errors:")
+            print(collection_errors)
+
+
             self.send_success_message(collection_errors)
 
         except Exception as e:
@@ -57,13 +74,13 @@ class Handler(BaseHTTPRequestHandler):
     def send_success_message(self, collection_errors):
         if collection_errors:
             self.send_json(200, {
-                "message": "Successfully inserted collection stats into DB."
+                "message": "Successfully inserted collection and terminology statistics into DB."
                            " For some collections no statistics could be generated.",
                 "collection_errors": collection_errors
             })
         else:
             self.send_json(200, {
-                "message": "Successfully inserted collection stats into DB."
+                "message": "Successfully inserted collection and terminology statistics into DB."
                            " For all collections statistics could be generated.",
                 "collection_errors": []
             })
