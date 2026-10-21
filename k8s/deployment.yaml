@@ -17,7 +17,7 @@ spec:
           image: ghcr.io/ts4nfdi/api-gateway-terminology-collection-statistics:latest
           env:
           - name: DB_URL
-            value: "postgresql://ts4nfdi-api-gateway-postgres-clone.ts4nfdi.svc.cluster.local:5432/gateway"
+            value: "postgresql://ts4nfdi-api-gateway-postgres-clone2.ts4nfdi.svc.cluster.local:5432/gateway"
           - name: DB_USERNAME
             valueFrom:
               secretKeyRef:
