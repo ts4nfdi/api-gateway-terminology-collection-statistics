@@ -17,16 +17,16 @@ spec:
           image: ghcr.io/ts4nfdi/api-gateway-terminology-collection-statistics:latest
           env:
           - name: DB_URL
-            value: "postgresql://ts4nfdi-api-gateway-postgres-clone.ts4nfdi.svc.cluster.local:5432/gateway"
+            value: "postgresql://ts4nfdi-api-gateway-postgres-clone2.ts4nfdi.svc.cluster.local:5432/gateway"
           - name: DB_USERNAME
             valueFrom:
               secretKeyRef:
-                name: postgres.ts4nfdi-api-gateway-postgres-clone.credentials.postgresql.acid.zalan.do
+                name: postgres.ts4nfdi-api-gateway-postgres-clone2.credentials.postgresql.acid.zalan.do
                 key: username
           - name: DB_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: postgres.ts4nfdi-api-gateway-postgres-clone.credentials.postgresql.acid.zalan.do
+                name: postgres.ts4nfdi-api-gateway-postgres-clone2.credentials.postgresql.acid.zalan.do
                 key: password
           - name: AGROPORTAL_API_KEY
             valueFrom:
