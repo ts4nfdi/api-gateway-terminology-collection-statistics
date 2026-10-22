@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ts4nfdi-api-gateway-collection-statistics-cronjob
+spec:
+  schedule: "0 2 * * 1"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 3600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: trigger-all-collection-statistics
+              image: curlimages/curl:8.12.1
+              command:
+                - curl
+                - --fail
+                - --show-error
+                - --silent
+                - --write-out
+                - "Duration: %{time_total}s\n"
+                - --max-time
+                - "1800"
+                - -X
+                - POST
+                - http://ts4nfdi-api-gateway-collection-statistics:8000/stats/all
+              resources:
+                requests:
+                  memory: 100Mi
+                limits:
+                  memory: 250Mi
