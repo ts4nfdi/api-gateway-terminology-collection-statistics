@@ -18,17 +18,28 @@ spec:
           containers:
             - name: trigger-all-collection-statistics
               image: curlimages/curl:8.12.1
+
+              env:
+                - name: PORTAL_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: statistics-service-portal-key
+                      key: STATISTICS_SERVICE_PORTAL_KEY
+
               command:
                 - curl
                 - --fail
                 - --show-error
                 - --silent
+                - -i
                 - --write-out
-                - "Duration: %{time_total}s\n"
+                - "\nDuration: %{time_total}s\n"
                 - --max-time
                 - "1800"
                 - -X
                 - POST
+                - -H
+                - "X-Portal-Key: $(PORTAL_KEY)"
                 - http://ts4nfdi-api-gateway-collection-statistics:8000/stats/all
               resources:
                 requests:
