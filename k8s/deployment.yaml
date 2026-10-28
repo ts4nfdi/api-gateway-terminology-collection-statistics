@@ -58,7 +58,7 @@ spec:
               secretKeyRef:
                 name: bioportal-api-key
                 key: BIOPORTAL_API_KEY
-          - name: statistics-service-portal-key
+          - name: STATISTICS_SERVICE_PORTAL_KEY
             valueFrom:
               secretKeyRef:
                 name: statistics-service-portal-key
