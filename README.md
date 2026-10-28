@@ -55,9 +55,11 @@ Important: The table and column names must match those expected by the service e
 
 ## API
 
-The service runs on port `8000` and provides two endpoints.
+The service runs on port `8000` and provides three endpoints. All endpoints are protected by a portal API key, which must be included in the X-Portal-Key HTTP header:
 
-- ### Calculate statistics for selected collections
+`X-Portal-Key: <portal-key>`
+
+### Calculate statistics for selected collections
 
 `POST /stats?collection=<collection-id>`
 
@@ -65,11 +67,16 @@ Multiple collections can be specified:
 
 `POST /stats?collection=<collection-id-1>&collection=<collection-id-2>`
 
-- ### Calculate statistics for all collections
+### Calculate statistics for all collections
 
 `POST /stats/all`
 
 Both requests automatically also calculate terminology statistics for the included terminologies.
+
+### Health check
+`GET /health`
+
+Returns `HTTP 200` OK if the service is running.
 
 ## Docker
 
@@ -122,7 +129,8 @@ The service currently uses the Kubernetes `ClusterIP` type and is therefore only
 For testing you can create a test client:
 
 ```bash
-kubectl run test-client -n <namespace> --restart=Never --image=curlimages/curl -- curl -X POST http://ts4nfdi-api-gateway-collection-statistics:8000/stats/all
+kubectl run test-client -n <namespace> --restart=Never --image=curlimages/curl \
+  -- curl -X POST http://ts4nfdi-api-gateway-collection-statistics:8000/stats/all -H "X-Portal-Key: <portal-key>"
 ```
 
 Check the output of the test client and service:
@@ -156,11 +164,14 @@ python src/terminology_stats.py
 ```
 
 ```bash
+# set the portal key as an environment variable
+export STATISTICS_SERVICE_PORTAL_KEY="<portal-key>"
 # start the server
 python src/server.py
 # test the server by making a curl request from another terminal
-curl -X POST http://localhost:8000/stats/all
-curl -X POST http://localhost:8000/stats?collection=<collectino_id1>&collection=<collection_id2>
+curl -X POST http://localhost:8000/stats/all -H "X-Portal-Key: <portal-key>"
+curl -X POST http://localhost:8000/stats?collection=<collectino_id1>&collection=<collection_id2> -H "X-Portal-Key: <portal-key>"
+curl -X GET http://localhost:8000/health -H "X-Portal-Key: <portal-key>"
 ```
 
 To enable database writes when running locally, you must configure the required database environment variables yourself (`DB_URL`, `DB_USERNAME`, and `DB_PASSWORD`). Provider API keys must also be set if the selected collections require them.

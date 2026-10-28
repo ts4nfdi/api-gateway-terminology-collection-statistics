@@ -1,6 +1,8 @@
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
+import os
+import secrets
 
 import collection_stats as cS
 from providers import get_providers
@@ -8,12 +10,32 @@ import database as db
 
 class Handler(BaseHTTPRequestHandler):
 
-    def do_POST(self):
+    def do_GET(self):
         parsed_url = urlparse(self.path)
         try:
+            if parsed_url.path == "/health":
+                if not self.verify_api_key():
+                    return
+                self.send_json(200, {})
+            else:
+                self.send_json(404, {"error": "Not found"})
+                return
+        except Exception as e:
+            print(f"Internal server error: {e}")
+            self.send_json(500, {"error": "Internal server error"})
+            return
+
+    def do_POST(self):
+        parsed_url = urlparse(self.path)
+
+        try:
             if parsed_url.path == "/stats":
+                if not self.verify_api_key():
+                    return
                 collections, collection_errors = self.handle_stats(parsed_url)
             elif parsed_url.path == "/stats/all":
+                if not self.verify_api_key():
+                    return
                 collections, collection_errors = self.handle_stats_all()
             else:
                 self.send_json(404, {"error": "Not found"})
@@ -52,7 +74,6 @@ class Handler(BaseHTTPRequestHandler):
 
             print("Collection errors:")
             print(collection_errors)
-
 
             self.send_success_message(collection_errors)
 
@@ -94,6 +115,18 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
         self.wfile.write(response)
+
+    def verify_api_key(self):
+        expected_key = os.getenv("STATISTICS_SERVICE_PORTAL_KEY")
+        provided_key = self.headers.get("X-Portal-Key", None)
+        if provided_key is None:
+            self.send_json(401, {"error": "'X-Portal-Key' header not provided"})
+            return False
+        if not secrets.compare_digest(expected_key, provided_key):
+            self.send_json(401, {"error": "'X-Portal-Key' header invalid"})
+            return False
+        return True
+
 
 server = HTTPServer(("0.0.0.0", 8000), Handler)
 

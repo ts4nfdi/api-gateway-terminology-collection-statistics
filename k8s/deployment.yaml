@@ -58,6 +58,11 @@ spec:
               secretKeyRef:
                 name: bioportal-api-key
                 key: BIOPORTAL_API_KEY
+          - name: statistics-service-portal-key
+            valueFrom:
+              secretKeyRef:
+                name: statistics-service-portal-key
+                key: STATISTICS_SERVICE_PORTAL_KEY
           ports:
             - containerPort: 8000
           resources:
