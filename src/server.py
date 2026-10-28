@@ -125,6 +125,8 @@ class Handler(BaseHTTPRequestHandler):
         if not secrets.compare_digest(expected_key, provided_key):
             self.send_json(401, {"error": "'X-Portal-Key' header invalid"})
             return False
+
+        print("Correct portal key")
         return True
 
 

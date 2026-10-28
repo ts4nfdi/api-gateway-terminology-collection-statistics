@@ -130,7 +130,7 @@ For testing you can create a test client:
 
 ```bash
 kubectl run test-client -n <namespace> --restart=Never --image=curlimages/curl \
-  -- curl -X POST http://ts4nfdi-api-gateway-collection-statistics:8000/stats/all -H "X-Portal-Key: <portal-key>"
+  -- curl -i -X POST http://ts4nfdi-api-gateway-collection-statistics:8000/stats/all -H "X-Portal-Key: <portal-key>"
 ```
 
 Check the output of the test client and service:
@@ -169,9 +169,9 @@ export STATISTICS_SERVICE_PORTAL_KEY="<portal-key>"
 # start the server
 python src/server.py
 # test the server by making a curl request from another terminal
-curl -X POST http://localhost:8000/stats/all -H "X-Portal-Key: <portal-key>"
-curl -X POST http://localhost:8000/stats?collection=<collectino_id1>&collection=<collection_id2> -H "X-Portal-Key: <portal-key>"
-curl -X GET http://localhost:8000/health -H "X-Portal-Key: <portal-key>"
+curl -i -X POST http://localhost:8000/stats/all -H "X-Portal-Key: <portal-key>"
+curl -i -X POST http://localhost:8000/stats?collection=<collectino_id1>&collection=<collection_id2> -H "X-Portal-Key: <portal-key>"
+curl -i -X GET http://localhost:8000/health -H "X-Portal-Key: <portal-key>"
 ```
 
 To enable database writes when running locally, you must configure the required database environment variables yourself (`DB_URL`, `DB_USERNAME`, and `DB_PASSWORD`). Provider API keys must also be set if the selected collections require them.
