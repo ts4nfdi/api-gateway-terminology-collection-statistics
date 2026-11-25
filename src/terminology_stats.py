@@ -29,8 +29,10 @@ TERMINOLOGY_STATS_TEMPLATE = {URI: None,
 def calc_stats_for_one_terminology(terminology, providers) -> dict:
     try:
         # check for missing required values
-        if terminology["label"] is None and terminology["uri"] is None:
-            raise ValueError("terminology must contain label or uri")
+        if terminology["uri"] is None and terminology["label"] is None:
+            raise ValueError("terminology must contain uri or label")
+        if terminology["source"] is None:
+            raise ValueError("terminology must contain provider")
 
         provider = terminology["source"]
         if not provider in providers:
@@ -47,11 +49,12 @@ def calc_stats_for_one_terminology(terminology, providers) -> dict:
         # How to source the terminology stats is provider dependent. The function adds the counts to terminology_stats
         function(providers[provider]["api_endpoint"], terminology, terminology_stats)
 
-        # add uri to statistics (if not available take label)
-        if terminology["uri"] is not None:
-            terminology_stats[URI] = terminology["uri"]
-        else:
-            terminology_stats[URI] = terminology["label"]
+        # add uri to statistics
+        if terminology_stats[URI] is None:
+            if terminology["uri"] is None:
+                raise RuntimeError("could not find uri for terminology")
+            else:
+                terminology_stats[URI] = terminology["uri"]
 
         # add source to statistics
         terminology_stats[SOURCE] = terminology["source"]
@@ -62,11 +65,12 @@ def calc_stats_for_one_terminology(terminology, providers) -> dict:
 
     except Exception as e:
         raise RuntimeError(
-            f"Error while processing terminology '{terminology.get('label')}' (URI: {terminology.get('uri')},"
-            f" source: {terminology.get('source')})") from e
+            f"Error while processing terminology '{terminology['label']}' (URI: {terminology['uri']},"
+            f" source: {terminology['source']})") from e
 
 
 def get_onto_stats_from_ols2(api_endpoint, terminology, terminology_stats):
+    # TODO: should also work with terminology-uri
     url = f"{api_endpoint}/ontologies/{terminology['label']}"
     data = send_request(url)
 
@@ -90,7 +94,7 @@ def get_onto_stats_from_ontoportal(api_endpoint, terminology, terminology_stats)
 
     if apikey is None:
         raise ValueError(f"Missing API key for provider {api_endpoint}")
-
+    # TODO: should also work with uri
     url = f"{api_endpoint}/ontologies/{terminology['label']}/metrics"
     params = {"apikey": apikey}
     data = send_request(url, params)
@@ -101,6 +105,7 @@ def get_onto_stats_from_ontoportal(api_endpoint, terminology, terminology_stats)
 
 
 def get_onto_stats_from_skosmos(api_endpoint, terminology, terminology_stats):
+    # TODO: should also work with uri
     url = f"{api_endpoint}/{terminology['label']}/vocabularyStatistics"
     data = send_request(url)
 
@@ -109,6 +114,7 @@ def get_onto_stats_from_skosmos(api_endpoint, terminology, terminology_stats):
 
 def get_onto_stats_from_jskos(api_endpoint, terminology, terminology_stats):
     # the number of skos:Concepts is returned in the response header under X-Total-Count
+    # TODO: should also work with uri
     url = f"{api_endpoint}/search"
     params = {"voc": terminology["label"],
               "limit": 1}
@@ -121,6 +127,8 @@ def get_onto_stats_from_jskos2(api_endpoint, terminology, terminology_stats):
     if terminology["source"] == "coli-conc":
         # the number of skos:Concepts is returned in the response header under X-Total-Count
         url = f"{api_endpoint}/voc/concepts"
+        if terminology["uri"] is None:
+            raise ValueError(f"uri required for terminology {terminology['label']}.")
         params = {"uri": terminology["uri"]}
         data, headers = send_request(url, params, return_headers=True)
 
@@ -154,6 +162,7 @@ def get_onto_stats_from_gnd(api_endpoint, terminology, terminology_stats):
 
 
 def get_onto_stats_from_nerc(api_endpoint, terminology, terminology_stats):
+    # TODO: should also work with uri
     query = f"""
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 

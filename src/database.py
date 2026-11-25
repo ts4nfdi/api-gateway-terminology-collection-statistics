@@ -1,5 +1,6 @@
 import os
 import psycopg
+from uuid import UUID
 
 from stats_keys import StatsKey
 
@@ -18,6 +19,28 @@ def get_connection():
         user=os.getenv("DB_USERNAME"),
         password=os.getenv("DB_PASSWORD"),
     )
+
+def get_collection_metadata():
+    metadata = {}
+
+    with get_connection() as connection, connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT collection_id, uri, label, source
+            FROM collection_resource
+            """
+        )
+
+        for collection_id, uri, label, source in cursor:
+            if collection_id not in metadata:
+                metadata[collection_id] = []
+
+            metadata[collection_id].append({
+                "uri": uri,
+                "label": label,
+                "source": source,
+            })
+    return metadata
 
 
 def insert_collection_stats(collections_stats, connection):

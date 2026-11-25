@@ -2,10 +2,10 @@ from pprint import pprint
 from datetime import datetime
 import sys
 
-from http_utils import send_request
 from providers import get_providers
 from terminology_stats import calc_stats_for_one_terminology
 from stats_keys import StatsKey
+from database import get_collection_metadata
 
 # region global variables
 BASE_URL = "https://w3id.org/ts4nfdi/collection/"
@@ -18,35 +18,35 @@ TERMINOLOGY = StatsKey.TERMINOLOGY.value
 # endregion
 
 def create_selected_collection_list(collection_ids=None, include_all=False):
-    collections_endpoint = "https://terminology.services.base4nfdi.de/api-gateway/collections/"
+    if collection_ids is None and not include_all:
+        return [], []
+
     try:
-        all_collections = send_request(collections_endpoint)
+        all_collections = get_collection_metadata()
+
+        all_collections = {
+            str(collection_id): terminologies
+            for collection_id, terminologies in all_collections.items()
+        }
 
         if include_all:
             return all_collections, []
 
-        if collection_ids is None:
-            return [], []
-
-        collections = []
+        collections = {}
         collection_errors = []
-        for collection_id in collection_ids:
-            found = False
-            for collection in all_collections:
-                if collection["id"] == collection_id:
-                    found = True
-                    collections.append(collection)
-                    break
-
-            if not found:
+        for requested_c_id in collection_ids:
+            if requested_c_id in all_collections:
+                collections[requested_c_id] = all_collections[requested_c_id]
+            else:
                 collection_errors.append({
-                    "collection": {"id": collection_id},
+                    "collection_id": requested_c_id,
                     "error": "Collection not found",
                 })
+
         return collections, collection_errors
 
     except Exception as e:
-        print(f"Unexpected answer from {collections_endpoint}: {e}.")
+        print(f"Error while fetching collection metadata: {e}.")
         raise
 
 
@@ -56,28 +56,28 @@ def calc_stats_for_collections(providers, collections):
     terminologies_stats = []
 
     print("Calculating statistics for collections...")
-    for c in collections:
+    for collection_id, terminologies in collections.items():
         try:
             time = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-            collection_stats, this_collection_terminologies_stats = calc_stats_for_one_collection(c, providers)
+            collection_stats, this_collection_terminologies_stats = calc_stats_for_one_collection(terminologies, providers)
 
             c_stats = {"created": time,
                        "count": collection_stats}
 
         except Exception as e:
             collection_errors.append({
-                "collection": {"id": c["id"], "label": c["label"]},
+                "collection_id": collection_id,
                 "error": str(e),
             })
 
-            print(f"Error while processing collection '{c['id']}': {e}")
+            print(f"Error while processing collection '{collection_id}': {e}")
             if e.__cause__ is not None:
                 print(e.__cause__)
             continue
 
         # collection_stats and terminologies_stats only get added if no exception occurred while processing the collection
-        collections_stats[c["id"]] = c_stats
+        collections_stats[collection_id] = c_stats
         terminologies_stats.extend(this_collection_terminologies_stats)
 
         # delete duplicate terminologies
@@ -93,9 +93,9 @@ def calc_stats_for_collections(providers, collections):
     return collections_stats, collection_errors, terminologies_stats
 
 
-def calc_stats_for_one_collection(collection, providers):
+def calc_stats_for_one_collection(terminologies, providers):
     collection_stats = {
-        TERMINOLOGY: len(collection["terminologies"]),
+        TERMINOLOGY: len(terminologies),
         PROPERTY: 0,
         CLASS: 0,
         INDIVIDUAL: 0,
@@ -103,7 +103,7 @@ def calc_stats_for_one_collection(collection, providers):
     }
     terminologies_stats = []
 
-    for terminology in collection["terminologies"]:
+    for terminology in terminologies:
         terminology_stats = calc_stats_for_one_terminology(terminology, providers)
 
         terminologies_stats.append(terminology_stats)
@@ -122,6 +122,8 @@ def main():
         collections, collection_errors = create_selected_collection_list(include_all=True)
     else:
         collections, collection_errors = create_selected_collection_list(sys.argv[1:])
+
+    print(collections, collection_errors)
 
     collections_stats, collection_errors2, terminology_stats = calc_stats_for_collections(providers, collections)
 
